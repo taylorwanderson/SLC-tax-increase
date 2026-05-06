@@ -1,0 +1,304 @@
+
+<h2 class="sr-only">Property tax calculator: current 2025 rates vs. proposed 2027 rates with Salt Lake City's 12.5% increase</h2>
+<style>
+  .root { padding: 1.5rem 0; font-size: 14px; }
+  .kicker { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .headline { font-size: 20px; font-weight: 500; line-height: 1.3; color: var(--color-text-primary); margin: 0 0 1.25rem; }
+
+  .toggle-bar { display: flex; align-items: center; gap: 0; background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 4px; margin-bottom: 1.75rem; border: 0.5px solid var(--color-border-secondary); }
+  .toggle-btn { flex: 1; padding: 10px 16px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 400; color: var(--color-text-secondary); transition: background .15s, color .15s; line-height: 1.3; text-align: center; }
+  .toggle-btn.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; border: 0.5px solid var(--color-border-secondary); }
+  .toggle-btn .btn-label { display: block; font-size: 13px; }
+  .toggle-btn .btn-year { display: block; font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .toggle-btn.active .btn-year { color: var(--color-text-secondary); }
+  .toggle-btn.proposed.active .btn-label { color: #BA7517; }
+  .toggle-btn.proposed.active .btn-year { color: #BA7517; opacity: .7; }
+
+  .controls-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .ctrl { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+  .ctrl-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-secondary); }
+  .slider-row { display: flex; align-items: center; gap: 8px; }
+  .slider-row input[type=range] { flex: 1; }
+  .val-display { font-size: 14px; font-weight: 500; color: var(--color-text-primary); min-width: 88px; text-align: right; }
+  .exemption-note { font-size: 11px; color: var(--color-text-tertiary); line-height: 1.4; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: var(--color-text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .stat-val.up { color: #BA7517; }
+
+  .breakdown-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-secondary); margin-bottom: 8px; }
+  .stacked-bars { margin-bottom: 1.25rem; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .bar-row-label { font-size: 12px; color: var(--color-text-secondary); width: 56px; flex-shrink: 0; text-align: right; }
+  .bar-row-label.active-year { color: var(--color-text-primary); font-weight: 500; }
+  .bar-track { flex: 1; height: 24px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; display: flex; border-radius: 4px; overflow: hidden; transition: width .35s; }
+  .bar-seg { height: 100%; transition: width .35s; }
+  .bar-amt { font-size: 12px; color: var(--color-text-secondary); width: 56px; flex-shrink: 0; }
+  .bar-amt.active-year { color: var(--color-text-primary); font-weight: 500; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .change-callout { border-radius: var(--border-radius-lg); border: 0.5px solid #FAC775; background: #FAEEDA; padding: 12px 16px; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 10px; }
+  .change-icon { font-size: 20px; color: #BA7517; flex-shrink: 0; margin-top: 1px; }
+  .change-text { font-size: 13px; color: #633806; line-height: 1.5; }
+  .change-text strong { font-weight: 500; }
+
+  hr.div { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1.25rem 0; }
+
+  .compare-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-secondary); margin-bottom: 10px; }
+  .cmp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; cursor: pointer; }
+  .cmp-city { font-size: 12px; color: var(--color-text-secondary); width: 116px; text-align: right; flex-shrink: 0; }
+  .cmp-city.sel { color: var(--color-text-primary); font-weight: 500; }
+  .cmp-track { flex: 1; height: 20px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; position: relative; }
+  .cmp-fill { height: 100%; background: #B5D4F4; border-radius: 3px; transition: width .3s; }
+  .cmp-fill.sel { background: #378ADD; }
+  .cmp-fill.proposed { background: #EF9F27; }
+  .cmp-fill.proposed.sel { background: #BA7517; }
+  .cmp-slc-marker { position: absolute; top: 0; bottom: 0; width: 2px; background: #EF9F27; opacity: .7; }
+  .cmp-rate { font-size: 12px; color: var(--color-text-secondary); width: 52px; flex-shrink: 0; }
+  .cmp-rate.sel { color: var(--color-text-primary); font-weight: 500; }
+  .source { font-size: 11px; color: var(--color-text-tertiary); margin-top: 1rem; line-height: 1.5; }
+
+  @media (prefers-color-scheme: dark) {
+    .toggle-btn.active { box-shadow: none; }
+    .change-callout { background: #412402; border-color: #633806; }
+    .change-text { color: #FAC775; }
+    .change-icon { color: #FAC775; }
+    .change-text strong { color: #FAEEDA; }
+    .cmp-fill { background: #185FA5; }
+    .cmp-fill.sel { background: #85B7EB; }
+    .cmp-fill.proposed { background: #854F0B; }
+    .cmp-fill.proposed.sel { background: #EF9F27; }
+  }
+</style>
+
+<div class="root">
+  <div class="kicker">Salt Lake City 2027 budget</div>
+  <h1 class="headline">Property tax: current rates vs. proposed 12.5% increase</h1>
+
+  <div class="toggle-bar" role="group" aria-label="View toggle: current or proposed">
+    <button class="toggle-btn active" id="btnCurrent" onclick="setMode('current')">
+      <span class="btn-label">Current rates</span>
+      <span class="btn-year">2025 adopted</span>
+    </button>
+    <button class="toggle-btn proposed" id="btnProposed" onclick="setMode('proposed')">
+      <span class="btn-label">Proposed rates</span>
+      <span class="btn-year">2027 · SLC +12.5% city levy</span>
+    </button>
+  </div>
+
+  <div class="controls-row">
+    <div class="ctrl">
+      <div class="ctrl-label">Your city</div>
+      <select id="citySelect" onchange="update()">
+        <option value="SLC">Salt Lake City</option>
+        <option value="SSL">South Salt Lake</option>
+        <option value="MUR">Murray</option>
+        <option value="WVC">West Valley City</option>
+        <option value="MID">Midvale</option>
+        <option value="SAN">Sandy</option>
+        <option value="WJC">West Jordan</option>
+        <option value="SJC">South Jordan</option>
+        <option value="RIV">Riverton</option>
+        <option value="BLU">Bluffdale</option>
+        <option value="DRA">Draper</option>
+        <option value="TAY">Taylorsville</option>
+        <option value="HER">Herriman</option>
+        <option value="HOL">Holladay</option>
+      </select>
+    </div>
+    <div class="ctrl" style="flex:2; min-width:200px;">
+      <div class="ctrl-label">Home market value</div>
+      <div class="slider-row">
+        <input type="range" id="slider" min="100000" max="2000000" step="10000" value="500000" oninput="update()" />
+        <span class="val-display" id="valDisplay">$500,000</span>
+      </div>
+      <div class="exemption-note" id="exemptNote">Taxable value: $275,000 · Utah 45% primary residence exemption</div>
+    </div>
+  </div>
+
+  <div class="summary-grid" id="summaryGrid"></div>
+
+  <div id="changeCallout"></div>
+
+  <div class="breakdown-label">Tax breakdown by levy type</div>
+  <div class="stacked-bars" id="stackedBars"></div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#378ADD;"></div>City levy</div>
+    <div class="leg"><div class="leg-dot" style="background:#1D9E75;"></div>School district</div>
+    <div class="leg"><div class="leg-dot" style="background:#888780;"></div>County</div>
+    <div class="leg"><div class="leg-dot" style="background:#D3D1C7;"></div>Special districts</div>
+  </div>
+
+  <hr class="div" />
+
+  <div class="compare-label">Compare to neighboring cities <span style="font-size:10px;font-weight:400;color:var(--color-text-tertiary);">· mills per $1,000 taxable · click to select</span></div>
+  <div id="compareChart"></div>
+
+  <div class="source">Source: Utah State Tax Commission, 2025 Tax Rates by Tax Area (Report 600, Jan. 5, 2026). Proposed view applies a 12.5% increase to the SLC municipal levy (code 3070) only; all other levies held constant. Taxable value = market value × 0.55 (Utah primary residence exemption). Estimates only.</div>
+</div>
+
+<script>
+const EX = 0.55;
+let mode = 'current';
+
+const C = {
+  SLC: { name:"Salt Lake City",   ta:"013-0000",  r:0.009240, city:0.003180, school:0.003767, county:0.001403, other:0.000890, slc:true  },
+  SSL: { name:"South Salt Lake",  ta:"014-0000",  r:0.010704, city:0.002608, school:0.005860, county:0.001403, other:0.000833, slc:false },
+  MUR: { name:"Murray",           ta:"021-0000",  r:0.008035, city:0.001696, school:0.004528, county:0.001403, other:0.000408, slc:false },
+  WVC: { name:"West Valley City", ta:"024-0000",  r:0.011579, city:0.002647, school:0.005860, county:0.001403, other:0.001669, slc:false },
+  MID: { name:"Midvale",          ta:"030-0000",  r:0.011049, city:0.001167, school:0.005656, county:0.001403, other:0.002823, slc:false },
+  SAN: { name:"Sandy",            ta:"035-0000",  r:0.009670, city:0.001049, school:0.005656, county:0.001403, other:0.001562, slc:false },
+  WJC: { name:"West Jordan",      ta:"037-0000",  r:0.009002, city:0.001328, school:0.005098, county:0.001403, other:0.001173, slc:false },
+  SJC: { name:"South Jordan",     ta:"038-0000",  r:0.009167, city:0.001313, school:0.005098, county:0.001403, other:0.001353, slc:false },
+  RIV: { name:"Riverton",         ta:"042-0000",  r:0.010052, city:0.000000, school:0.005098, county:0.001403, other:0.003551, slc:false },
+  BLU: { name:"Bluffdale",        ta:"045-0000",  r:0.008720, city:0.000866, school:0.005098, county:0.001403, other:0.001353, slc:false },
+  DRA: { name:"Draper",           ta:"051-0000",  r:0.009369, city:0.000936, school:0.005656, county:0.001403, other:0.001374, slc:false },
+  TAY: { name:"Taylorsville",     ta:"061-0000",  r:0.010979, city:0.000820, school:0.005860, county:0.001403, other:0.002896, slc:false },
+  HER: { name:"Herriman",         ta:"070-0000",  r:0.010826, city:0.000180, school:0.005098, county:0.001403, other:0.004145, slc:false },
+  HOL: { name:"Holladay",         ta:"080-0000",  r:0.009933, city:0.001334, school:0.005860, county:0.001403, other:0.001336, slc:false },
+};
+
+function getRate(d, m) {
+  if (m === 'proposed' && d.slc) return d.r + d.city * 0.125;
+  return d.r;
+}
+function getCity(d, m) {
+  if (m === 'proposed' && d.slc) return d.city * 1.125;
+  return d.city;
+}
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+function mills(r) { return (r * 1000).toFixed(3); }
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnCurrent').classList.toggle('active', m === 'current');
+  document.getElementById('btnProposed').classList.toggle('active', m === 'proposed');
+  update();
+}
+
+function update() {
+  const key = document.getElementById('citySelect').value;
+  const d = C[key];
+  const home = parseInt(document.getElementById('slider').value);
+  const taxable = home * EX;
+  const curRate = d.r;
+  const propRate = getRate(d, 'proposed');
+  const displayRate = mode === 'proposed' ? propRate : curRate;
+  const displayTax = taxable * displayRate;
+  const curTax = taxable * curRate;
+  const propTax = taxable * propRate;
+  const diff = propTax - curTax;
+
+  document.getElementById('valDisplay').textContent = '$' + home.toLocaleString();
+  document.getElementById('exemptNote').textContent =
+    'Taxable value: $' + Math.round(taxable).toLocaleString() + ' · Utah 45% primary residence exemption';
+
+  const sg = document.getElementById('summaryGrid');
+  sg.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">${mode === 'proposed' ? 'Proposed' : 'Current'} rate</div>
+      <div class="stat-val ${mode === 'proposed' && d.slc ? 'up' : ''}">${(displayRate*100).toFixed(4)}%</div>
+      <div class="stat-sub">${mills(displayRate)} mills</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">${mode === 'proposed' ? 'Proposed' : 'Est.'} annual tax</div>
+      <div class="stat-val ${mode === 'proposed' && d.slc ? 'up' : ''}">${fmt(displayTax)}</div>
+      <div class="stat-sub">${fmt(displayTax/12)}/month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">City levy portion</div>
+      <div class="stat-val">${fmt(taxable * getCity(d, mode))}</div>
+      <div class="stat-sub">${(getCity(d,mode)/displayRate*100).toFixed(0)}% of total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">School district</div>
+      <div class="stat-val">${fmt(taxable * d.school)}</div>
+      <div class="stat-sub">${(d.school/displayRate*100).toFixed(0)}% of total</div>
+    </div>
+  `;
+
+  const cc = document.getElementById('changeCallout');
+  if (mode === 'proposed' && d.slc && diff > 0) {
+    cc.innerHTML = `<div class="change-callout">
+      <i class="ti ti-info-circle change-icon" aria-hidden="true"></i>
+      <div class="change-text">
+        Under the proposal, SLC's municipal levy rises 12.5% — from ${mills(d.city)} to ${mills(d.city*1.125)} mills. 
+        For a <strong>${'$'+home.toLocaleString()}</strong> home, that adds roughly 
+        <strong>${fmt(diff)}/year</strong> (<strong>${fmt(diff/12)}/month</strong>) to your bill. 
+        School, county, and special district levies remain unchanged.
+      </div>
+    </div>`;
+  } else if (mode === 'proposed' && !d.slc) {
+    cc.innerHTML = `<div class="change-callout">
+      <i class="ti ti-info-circle change-icon" aria-hidden="true"></i>
+      <div class="change-text">
+        The 12.5% increase proposal affects <strong>Salt Lake City's municipal levy only</strong>. 
+        ${d.name} residents would see <strong>no change</strong> from this specific proposal — select Salt Lake City above to see the impact.
+      </div>
+    </div>`;
+  } else {
+    cc.innerHTML = '';
+  }
+
+  const maxBar = Math.max(propRate, ...Object.values(C).map(x => x.r)) * taxable;
+  const barW = (v) => (v / maxBar * 100).toFixed(1) + '%';
+
+  const sb = document.getElementById('stackedBars');
+  const rows = [
+    { label: '2025', rate: curRate, cityV: d.city, isCur: true },
+    { label: '2027\nproposal', rate: propRate, cityV: getCity(d,'proposed'), isCur: false },
+  ];
+  sb.innerHTML = rows.map(row => {
+    const total = taxable * row.rate;
+    const cVal = taxable * row.cityV;
+    const sVal = taxable * d.school;
+    const coVal = taxable * d.county;
+    const oVal = taxable * d.other;
+    const isActive = (mode === 'current' && row.isCur) || (mode === 'proposed' && !row.isCur);
+    const isSLCproposed = !row.isCur && d.slc;
+    const cityColor = isSLCproposed ? '#EF9F27' : '#378ADD';
+    return `<div class="bar-row">
+      <div class="bar-row-label ${isActive ? 'active-year' : ''}">${row.label}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${barW(total)};">
+          <div class="bar-seg" style="width:${(cVal/total*100).toFixed(1)}%;background:${cityColor};"></div>
+          <div class="bar-seg" style="width:${(sVal/total*100).toFixed(1)}%;background:#1D9E75;"></div>
+          <div class="bar-seg" style="width:${(coVal/total*100).toFixed(1)}%;background:#888780;"></div>
+          <div class="bar-seg" style="width:${(oVal/total*100).toFixed(1)}%;background:#D3D1C7;"></div>
+        </div>
+      </div>
+      <div class="bar-amt ${isActive ? 'active-year' : ''}">${fmt(total)}</div>
+    </div>`;
+  }).join('');
+
+  const maxRate = Math.max(...Object.values(C).map(x => getRate(x, mode)));
+  const sorted = Object.entries(C).sort((a,b) => getRate(b[1],mode) - getRate(a[1],mode));
+  const ce = document.getElementById('compareChart');
+  ce.innerHTML = sorted.map(([k, x]) => {
+    const r = getRate(x, mode);
+    const isSel = k === key;
+    const isProposedSLC = mode === 'proposed' && x.slc;
+    const fillClass = `cmp-fill${isSel?' sel':''}${isProposedSLC?' proposed':''}`;
+    const slcProposedR = getRate(C.SLC, mode);
+    const slcW = (slcProposedR / maxRate * 100).toFixed(1);
+    return `<div class="cmp-row" onclick="document.getElementById('citySelect').value='${k}';update();">
+      <div class="cmp-city ${isSel?'sel':''}">${x.name}</div>
+      <div class="cmp-track">
+        <div class="${fillClass}" style="width:${(r/maxRate*100).toFixed(1)}%;"></div>
+        ${k!=='SLC' && mode==='current' ? `<div class="cmp-slc-marker" style="left:${(C.SLC.r/maxRate*100).toFixed(1)}%;"></div>` : ''}
+      </div>
+      <div class="cmp-rate ${isSel?'sel':''}">${mills(r)}</div>
+    </div>`;
+  }).join('');
+}
+
+update();
+</script>
